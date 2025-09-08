@@ -1,120 +1,119 @@
-/* Container for the whole login page */
-.login-container {
-  display: flex;
-  height: 100vh;
-  font-family: Arial, sans-serif;
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-/* Left side (logo background) */
+body {
+  background-color: #fcdfea; /* light pink background */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-container {
+  display: flex;
+  flex: 1;
+  padding: 2rem;
+  gap: 2rem;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Left (logo) */
 .left-section {
   flex: 1;
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
 .logo-circle {
-  width: 200px;
-  height: 200px;
+  background-color: #5d3d9c; /* purple */
   border-radius: 50%;
-  background: white;
+  width: 300px;
+  height: 300px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  align-items: center;
 }
 
 .logo-circle img {
-  max-width: 70%;
+  width: 70%;
   height: auto;
 }
 
-/* Right side (form) */
+/* Right (form) */
 .right-section {
   flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: #f9fafb;
-  padding: 40px;
+  align-items: center;
 }
 
-/* Login form */
 .login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 350px;
   background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0px 6px 15px rgba(93, 61, 156, 0.2); /* subtle purple shadow */
 }
 
 .login-form h2 {
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #111827;
+  margin-bottom: 1rem;
+  color: #5d3d9c;
 }
 
 .login-form label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: #5d3d9c;
 }
 
 .login-form input {
+  padding: 0.8rem 1rem;
+  border-radius: 20px;
+  border: none;
+  background-color: #c4c6f5; /* lavender input */
+  font-size: 1rem;
   width: 100%;
-  padding: 10px;
-  margin-bottom: 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  outline: none;
-  font-size: 14px;
 }
 
 .login-form input:focus {
-  border-color: #4f46e5;
-  box-shadow: 0px 0px 3px rgba(79, 70, 229, 0.5);
+  outline: 2px solid #d674a3; /* pink outline on focus */
 }
 
-/* Button */
+/* Buttons */
 .primary-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #4f46e5;
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
+  padding: 0.8rem;
+  background-color: #d674a3; /* pink */
   border: none;
-  border-radius: 6px;
+  border-radius: 25px;
+  color: white;
+  font-size: 1.2rem;
   cursor: pointer;
   transition: background 0.3s;
 }
 
 .primary-btn:hover {
-  background-color: #4338ca;
-}
-
-.primary-btn:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
+  background-color: #c25c91; /* darker pink hover */
 }
 
 /* Signup link */
 .signup-link {
+  font-size: 0.9rem;
   text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
 }
 
 .signup-link a {
-  color: #4f46e5;
-  font-weight: 500;
+  color: #5d3d9c; /* purple */
   text-decoration: none;
+  font-weight: bold;
 }
 
 .signup-link a:hover {
