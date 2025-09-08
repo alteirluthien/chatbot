@@ -1,4 +1,4 @@
-import { User } from '../../../../models/User';
+import { User } from '../../../../models/user';
 
 export async function POST(request) {
   try {
