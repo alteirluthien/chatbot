@@ -1,12 +1,12 @@
 // Temporary local storage-based registration for testing
 export async function POST(request) {
   try {
-    const { name, email, password } = await request.json();
+    const { email, password } = await request.json();
 
     // Validate input
-    if (!name || !email || !password) {
+    if (!email || !password) {
       return Response.json(
-        { error: 'Name, email, and password are required' },
+        { error: 'Email, and password are required' },
         { status: 400 }
       );
     }
