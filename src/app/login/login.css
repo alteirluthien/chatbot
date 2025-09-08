@@ -1,0 +1,118 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    background-color: #fcdfea;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  header {
+    background-color: #5d3d9c;
+    color: white;
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+  }
+  
+  a {
+  text-decoration: none;
+  color: white;
+  }
+  
+  .login-container {
+    display: flex;
+    flex: 1;
+    padding: 2rem;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .left-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .logo-circle {
+    background-color: #5d3d9c;
+    border-radius: 50%;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .logo-circle img {
+    width: 70%;
+    height: auto;
+  }
+  
+  .right-section {
+    flex: 1;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .login-form label {
+    font-weight: 500;
+  }
+  
+  .login-form input {
+    padding: 0.8rem 1rem;
+    border-radius: 20px;
+    border: none;
+    background-color: #c4c6f5;
+    font-size: 1rem;
+    width: 100%;
+  }
+  
+  .primary-btn {
+    padding: 0.8rem;
+    background-color: #d674a3;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .primary-btn:hover {
+    background-color: #c25c91;
+  }
+  
+  .signup-link {
+    font-size: 0.9rem;
+  }
+  
+  .signup-link a {
+    color: #5d3d9c;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .social-btn {
+    padding: 0.8rem;
+    background-color: #5d3d9c;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    
+  }
+  
+  
