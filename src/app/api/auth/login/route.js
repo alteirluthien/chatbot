@@ -1,7 +1,7 @@
 // Temporary local storage-based registration for testing
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    const {email, password } = await request.json();
 
     // Validate input
     if (!email || !password) {
