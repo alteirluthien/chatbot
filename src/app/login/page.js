@@ -24,17 +24,19 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-   if (result.success) {
-      // Save user info for later use in chatbot page
-      localStorage.setItem('user', JSON.stringify({ name: result.name, id: result.userId }));
+      const data = await res.json();
 
-      // Redirect to chatbot page
-      router.push('/');
-    } else {
-      setError(result.error);
+      if (data.success) {
+        localStorage.setItem('user', JSON.stringify({ name: data.name, id: data.userId }));
+        router.push('/chatbot');
+      } else {
+        setError(data.error || 'Login failed');
+      }
+    } catch (err) {
+      setError('Network error');
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (

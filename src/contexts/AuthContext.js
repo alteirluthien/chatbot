@@ -8,88 +8,44 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Load user from localStorage on mount
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) setUser(JSON.parse(storedUser));
     setIsLoading(false);
   }, []);
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
+      const data = await res.json();
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
+      if (data.success) {
+        setUser({ name: data.name, id: data.userId });
+        localStorage.setItem('user', JSON.stringify({ name: data.name, id: data.userId }));
         return { success: true };
       } else {
         return { success: false, error: data.error || 'Login failed' };
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: 'Network error. Please try again.' };
-    }
-  };
-
-  const register = async (name, email, password) => {
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
-        return { success: true };
-      } else {
-        return { success: false, error: data.error || 'Registration failed' };
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, error: 'Network error. Please try again.' };
+    } catch (err) {
+      return { success: false, error: 'Network error' };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
     setUser(null);
-  };
-
-  const value = {
-    user,
-    login,
-    register,
-    logout,
-    isLoading
+    localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+export const useAuth = () => useContext(AuthContext);
