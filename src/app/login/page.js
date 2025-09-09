@@ -21,15 +21,19 @@ export default function Login() {
 
     const result = await login(email, password);
 
-    if (result.success) {
-      router.push('/');
+   if (result.success) {
+      // Save user info for later use in chatbot page
+      localStorage.setItem('user', JSON.stringify({ name: result.name, id: result.userId }));
+
+      // Redirect to chatbot page
+      router.push('/chatbot');
     } else {
       setError(result.error);
     }
 
     setIsLoading(false);
   };
-
+  
   return (
   
     <div className="login-container">
