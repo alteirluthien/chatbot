@@ -3,11 +3,11 @@ import bcrypt from "bcryptjs";
 
 export async function POST(request) {
   try {
-    const { name, email, password } = await request.json();
+    const { email, password } = await request.json();
 
     if (!email || !password) {
       return Response.json(
-        { error: "Email and password are required" },
+        { success: false, error: "Email and password are required" },
         { status: 400 }
       );
     }
@@ -15,27 +15,31 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db("chatbot");
 
-    // Check if user already exists
-    const existingUser = await db.collection("users").findOne({ email });
-    if (existingUser) {
-      return Response.json({ error: "User already exists" }, { status: 400 });
+    // Find the user
+    const user = await db.collection("users").findOne({ email });
+    if (!user) {
+      return Response.json(
+        { success: false, error: "Invalid email or password" },
+        { status: 401 }
+      );
     }
 
-    // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Compare password
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return Response.json(
+        { success: false, error: "Invalid email or password" },
+        { status: 401 }
+      );
+    }
 
-    const result = await db.collection("users").insertOne({
-      name,
-      email,
-      password: hashedPassword,
-    });
-
+    // Login successful
     return Response.json(
-      { success: true, userId: result.insertedId },
-      { status: 201 }
+      { success: true, userId: user._id, name: user.name },
+      { status: 200 }
     );
   } catch (error) {
-    console.error("Registration error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Login error:", error);
+    return Response.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
