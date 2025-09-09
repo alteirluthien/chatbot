@@ -26,7 +26,7 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify({ name: result.name, id: result.userId }));
 
       // Redirect to chatbot page
-      router.push('/chatbot');
+      router.push('/');
     } else {
       setError(result.error);
     }
