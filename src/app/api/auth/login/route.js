@@ -1,12 +1,10 @@
-import { connectDB } from "../../../lib/mongodb";
-import User from "../../../models/User";
+import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
 
 export async function POST(request) {
   try {
     const { email, password } = await request.json();
 
-    // ✅ Validate input
     if (!email || !password) {
       return Response.json(
         { error: "Email and password are required" },
@@ -14,37 +12,21 @@ export async function POST(request) {
       );
     }
 
-    // ✅ Connect to DB
-    await connectDB();
+    const client = await clientPromise;
+    const db = client.db("chatbot");
 
-    // ✅ Find user
-    const user = await User.findOne({ email });
+    const user = await db.collection("users").findOne({ email });
     if (!user) {
-      return Response.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
+      return Response.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    // ✅ Compare hashed passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return Response.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
+      return Response.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    // ✅ Success
     return Response.json(
-      {
-        success: true,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-        },
-      },
+      { success: true, user: { id: user._id, email: user.email, name: user.name } },
       { status: 200 }
     );
   } catch (error) {
