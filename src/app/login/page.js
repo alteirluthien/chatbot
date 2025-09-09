@@ -1,17 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import "./login.css";
+import './login.css';
 
-export default function Login() {
+export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -19,7 +17,12 @@ export default function Login() {
     setIsLoading(true);
     setError('');
 
-    const result = await login(email, password);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
    if (result.success) {
       // Save user info for later use in chatbot page
@@ -33,55 +36,62 @@ export default function Login() {
 
     setIsLoading(false);
   };
-  
+
   return (
-  
-    <div className="login-container">
-      {/* Left section with logo */}
-      <div className="left-section">
-        <div className="logo-circle">
-           <img 
-    src="https://cdn-icons-png.flaticon.com/512/4712/4712100.png" 
-    alt="Chatbot Icon" 
-  />
-        </div>
+    <div className="login-page">
+
+      {/* Top bar */}
+      <div className="top-bar">
+        <h1>College Enquiry</h1>
       </div>
 
-      {/* Right section with login form */}
-      <div className="right-section">
-        <form className="login-form" onSubmit={handleSubmit}>
-          <h2>Sign in to your account</h2>
+      <div className="login-container">
+        {/* Left section with logo */}
+        <div className="left-section">
+          <div className="logo-circle">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/4712/4712100.png"
+              alt="Chatbot Icon"
+            />
+          </div>
+        </div>
 
-          {error && (
-            <div style={{ color: "red", fontWeight: "bold" }}>{error}</div>
-          )}
+        {/* Right section with login form */}
+        <div className="right-section">
+          <form className="login-form" onSubmit={handleSubmit}>
+            <h2>Sign in to your account</h2>
 
-          <label htmlFor="email">Email address</label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+            {error && (
+              <div className="error-message">{error}</div>
+            )}
 
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+            <label htmlFor="email">Email address</label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-          <button type="submit" className="primary-btn" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign in'}
-          </button>
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
-          <p className="signup-link">
-            Don’t have an account? <Link href="/register">Sign up</Link>
-          </p>
-        </form>
+            <button type="submit" className="primary-btn" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+
+            <p className="signup-link">
+              Don’t have an account? <Link href="/register">Sign up</Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );
