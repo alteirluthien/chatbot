@@ -36,13 +36,23 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+    // ✅ Register function
+  const register = async (name, email, password) => {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+    const data = await res.json();
+    return data; // { success: true/false, error: string }
   };
 
+// In AuthContext
+const logout = () => {
+  setUser(null); // <-- this triggers re-render for all components using `user`
+};
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );

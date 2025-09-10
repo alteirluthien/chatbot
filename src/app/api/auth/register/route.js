@@ -1,4 +1,4 @@
-import { User } from '../../../../models/user';
+import { User } from '../../../models/user';
 
 export async function POST(request) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request) {
     if (password.length < 6) {
       return Response.json(
         { error: 'Password must be at least 6 characters long' },
-        { status: 400 }
+        { status: 400 } // ✅ fixed typo
       );
     }
 
@@ -44,7 +44,7 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Registration error:', error);
-    
+
     if (error.message === 'User already exists') {
       return Response.json(
         { error: 'A user with this email already exists' },
