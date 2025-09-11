@@ -25,10 +25,6 @@ export default function LoggedInChatbotPage() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
 
-  useEffect(() => {
-    if (!user) router.push('/login'); // redirect if not logged in
-  }, [user, router]);
-
   const addMessage = (sender, content) => {
     setMessages(prev => [...prev, { sender, text: content }]);
   };
@@ -49,7 +45,32 @@ export default function LoggedInChatbotPage() {
   };
 
   const showFAQs = () => {
-    Object.keys(faqResponses).forEach(q => addMessage('bot', `<b>${q}</b><br>${faqResponses[q]}`));
+    const faqBubble = document.createElement("div");
+    faqBubble.className = "message-bubble bot-bubble faq-container";
+
+    const header = document.createElement("div");
+    header.innerHTML = "<b>Frequently Asked Questions:</b>";
+    faqBubble.appendChild(header);
+
+    Object.keys(faqResponses).forEach((question) => {
+      const qBtn = document.createElement("button");
+      qBtn.className = "faq-question";
+      qBtn.innerHTML = question;
+      qBtn.onclick = () => addMessage('bot', faqResponses[question]);
+      faqBubble.appendChild(qBtn);
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "chat-message bot";
+    const avatar = document.createElement("div");
+    avatar.className = "avatar bot-avatar";
+
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(faqBubble);
+
+    const chatContainer = document.getElementById("chat-container");
+    chatContainer.appendChild(wrapper);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
   };
 
   const clearChat = () => {

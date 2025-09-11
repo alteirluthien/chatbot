@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import '../styles/auth.css';
-; // ✅ reuse the same css as login
+
 
 export default function RegisterPage() {
   const { register } = useAuth();
