@@ -1,49 +1,24 @@
-// Temporary local storage-based registration for testing
-export async function POST(request) {
+import dbConnect from '@/lib/mongodb';
+import { User } from '@/models/User';
+import bcrypt from 'bcryptjs';
+
+export async function registerUser({ name, email, password }) {
   try {
-    const { name, email, password } = await request.json();
+    await dbConnect();
 
-    // Validate input
-    if (!name || !email || !password) {
-      return Response.json(
-        { error: 'Name, email, and password are required' },
-        { status: 400 }
-      );
-    }
+    // Check existing user
+    const existing = await User.findOne({ email });
+    if (existing) return { error: 'User already exists' };
 
-    // Validate password length
-    if (password.length < 6) {
-      return Response.json(
-        { error: 'Password must be at least 6 characters long' },
-        { status: 400 }
-      );
-    }
+    // Hash password
+    const hashed = await bcrypt.hash(password, 10);
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return Response.json(
-        { error: 'Please enter a valid email address' },
-        { status: 400 }
-      );
-    }
+    // Create user
+    const user = await User.create({ name, email, password: hashed });
 
-    // For now, just return success without actually storing in MongoDB
-    // This allows you to test the UI while fixing the MongoDB connection
-    return Response.json({
-      success: true,
-      user: {
-        id: Date.now().toString(), // Simple ID generation
-        name: name,
-        email: email,
-      }
-    }, { status: 201 });
-
-  } catch (error) {
-    console.error('Registration error:', error);
-    return Response.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return { success: true, user: { id: user._id, name: user.name, email: user.email } };
+  } catch (err) {
+    console.error('Registration error:', err.message);
+    return { error: 'Internal server error' };
   }
 }

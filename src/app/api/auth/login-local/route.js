@@ -1,39 +1,20 @@
-// Temporary local storage-based login for testing
-export async function POST(request) {
+import dbConnect from '@/lib/mongodb';
+import { User } from '@/models/User';
+import bcrypt from 'bcryptjs';
+
+export async function loginUser({ email, password }) {
   try {
-    const { email, password } = await request.json();
+    await dbConnect();
 
-    // Validate input
-    if (!email || !password) {
-      return Response.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
+    const user = await User.findOne({ email });
+    if (!user) return { error: 'User not found' };
 
-    // For testing purposes, accept any email/password combination
-    // In real implementation, this would check against MongoDB
-    if (password.length >= 6) {
-      return Response.json({
-        success: true,
-        user: {
-          id: Date.now().toString(),
-          name: email.split('@')[0], // Use email prefix as name
-          email: email,
-        }
-      });
-    } else {
-      return Response.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return { error: 'Incorrect password' };
 
-  } catch (error) {
-    console.error('Login error:', error);
-    return Response.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return { success: true, user: { id: user._id, name: user.name, email: user.email } };
+  } catch (err) {
+    console.error('Login error:', err.message);
+    return { error: 'Internal server error' };
   }
 }

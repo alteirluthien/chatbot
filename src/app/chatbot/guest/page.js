@@ -1,11 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // <-- import this
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/auth.css';
-import ChatGPTInterface from '../../../components/ChatGPTInterface';
-
-
 
 const faqResponses = {
   "What are the entry requirements?": "Entry requirements vary depending on the course. Please check the specific program page on our website or contact admissions for more details.",
@@ -18,9 +16,12 @@ const faqResponses = {
   "How do I accept my offer?": "Log into the application portal, click 'Accept Offer', and follow the instructions to confirm your place.",
   "My student ID card is lost or stolen": "Report the loss to Student Services. You can request a replacement through the student portal or at the help desk."
 };
+
 export default function GuestChatbotPage() {
   const [input, setInput] = useState('');
-  const router = useRouter(); // <-- initialize router
+  const [faqVisible, setFaqVisible] = useState(false);
+  const router = useRouter();
+  const { user, logout } = useAuth();
 
   const addMessage = (sender, content) => {
     const chatContainer = document.getElementById("chat-container");
@@ -63,33 +64,11 @@ export default function GuestChatbotPage() {
     }, 500);
   };
 
-  const showFAQs = () => {
-    const faqBubble = document.createElement("div");
-    faqBubble.className = "message-bubble bot-bubble faq-container";
+  const showFAQs = () => setFaqVisible(!faqVisible);
 
-    const header = document.createElement("div");
-    header.innerHTML = "<b>Frequently Asked Questions:</b>";
-    faqBubble.appendChild(header);
-
-    Object.keys(faqResponses).forEach((question) => {
-      const qBtn = document.createElement("button");
-      qBtn.className = "faq-question";
-      qBtn.innerHTML = question;
-      qBtn.onclick = () => addMessage('bot', faqResponses[question]);
-      faqBubble.appendChild(qBtn);
-    });
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "chat-message bot";
-    const avatar = document.createElement("div");
-    avatar.className = "avatar bot-avatar";
-
-    wrapper.appendChild(avatar);
-    wrapper.appendChild(faqBubble);
-
-    const chatContainer = document.getElementById("chat-container");
-    chatContainer.appendChild(wrapper);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+  const handleFaqClick = (question) => {
+    addMessage('bot', faqResponses[question]);
+    setFaqVisible(false);
   };
 
   const clearChat = () => {
@@ -98,15 +77,62 @@ export default function GuestChatbotPage() {
     addMessage('bot', 'Chat cleared. You can start a new conversation.');
   };
 
+  const saveChat = async () => {
+    if (!user) return alert("Login first to save chat.");
+
+    const chatContainer = document.getElementById("chat-container");
+    const messages = Array.from(chatContainer.children).map(div => {
+      const sender = div.classList.contains('user') ? 'user' : 'bot';
+      const text = div.querySelector('.message-bubble').innerText;
+      return { sender, text };
+    });
+
+    const sessionId = Date.now().toString();
+
+    const res = await fetch('/api/auth/savechat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat: messages, userEmail: user.email, sessionId })
+    });
+
+    const result = await res.json();
+    alert(result.message);
+  };
+
+  const openPreviousChat = async () => {
+    if (!user) return alert("Login first to open previous chat.");
+
+    const res = await fetch("/api/auth/getPreviousChat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userEmail: user.email })
+    });
+
+    const result = await res.json();
+
+    if (result.status === "success") {
+      clearChat();
+      result.chat.forEach(msg => addMessage(msg.sender, msg.chat_message));
+    } else {
+      alert(result.message);
+    }
+  };
+
+  const feedback = () => alert("Open feedback modal (mock function).");
+
   return (
     <div className="chatbot-page-wrapper">
       <header className="top-bar">
         <h1>College Enquiry (Guest)</h1>
         <div className="dropdown-container">
-            <div className="menu-icon" onClick={() => document.getElementById("dropdownMenu").classList.toggle("show")}>☰</div>
-              <div className="dropdown" id="dropdownMenu">
-                <button onClick={clearChat}>Clear Chat</button>
-              </div>
+          <div className="menu-icon" onClick={() => document.getElementById("dropdownMenu").classList.toggle("show")}>☰</div>
+          <div className="dropdown" id="dropdownMenu">
+            <button onClick={saveChat}>Save Chat</button>
+            <button onClick={openPreviousChat}>Open Previous Chat</button>
+            <button onClick={clearChat}>Clear Chat</button>
+            <button onClick={feedback}>Feedback</button>
+            <button onClick={() => { logout(); router.push('/login'); }}>Logout</button>
+          </div>
         </div>
       </header>
 
@@ -115,23 +141,32 @@ export default function GuestChatbotPage() {
 
         <div className="button-bar">
           <button onClick={showFAQs}>FAQ</button>
-          <button onClick={() => router.push('/login')}>Login</button> {/* fixed */}
+          <button onClick={() => router.push('/login')}>Login</button>
+          {faqVisible && (
+            <div className="faq-container">
+              <b>Frequently Asked Questions:</b>
+              {Object.keys(faqResponses).map((q) => (
+                <button key={q} className="faq-question" onClick={() => handleFaqClick(q)}>
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
-     <footer className="chat-footer">
-      <div className="input-bubble">
-        <input
-          type="text"
-          placeholder="Send your message…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-        />
-        <button onClick={sendMessage}>🔍</button>
-      </div>
-    </footer>
-
+      <footer className="chat-footer">
+        <div className="input-bubble">
+          <input
+            type="text"
+            placeholder="Send your message…"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          />
+          <button onClick={sendMessage}>🔍</button>
+        </div>
+      </footer>
     </div>
   );
 }

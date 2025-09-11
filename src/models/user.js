@@ -12,7 +12,7 @@ export class User {
 
   static async getCollection() {
     const client = await clientPromise;
-    const db = client.db('college_enquiry');
+    const db = client.db('chatbot');
     return db.collection('users');
   }
 
