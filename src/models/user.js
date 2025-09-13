@@ -74,5 +74,5 @@ class User {
   }
 }
 
-// Export the class
+// Fixed export statement
 export default User;
