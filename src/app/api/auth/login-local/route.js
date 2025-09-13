@@ -1,20 +1,41 @@
-import dbConnect from '@/lib/mongodb';
-import { User } from '@/models/User';
-import bcrypt from 'bcryptjs';
-
-export async function loginUser({ email, password }) {
+// Temporary local storage-based login for testing
+export async function POST(request) {
   try {
-    await dbConnect();
-
-    const user = await User.findOne({ email });
-    if (!user) return { error: 'User not found' };
-
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return { error: 'Incorrect password' };
-
-    return { success: true, user: { id: user._id, name: user.name, email: user.email } };
-  } catch (err) {
-    console.error('Login error:', err.message);
-    return { error: 'Internal server error' };
+    const { email, password } = await request.json();
+    
+    // Validate input
+    if (!email || !password) {
+      return Response.json(
+        { success: false, error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+    
+    // For testing purposes, accept any email/password combination
+    if (password.length >= 6) {
+      // Generate a mock token (for testing only)
+      const mockToken = 'mock-jwt-token-' + Date.now();
+      
+      return Response.json({
+        success: true,
+        user: {
+          id: Date.now().toString(),
+          name: email.split('@')[0],
+          email: email,
+          token: mockToken  // Add token field
+        }
+      });
+    } else {
+      return Response.json(
+        { success: false, error: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    return Response.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

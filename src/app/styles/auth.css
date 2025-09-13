@@ -355,8 +355,9 @@ margin-bottom: 60px;
 }
 
 /* Big purple bubble for all FAQs */
+/* Add to auth.css */
 .faq-container {
-  background-color: #c4c6f5;  /* purple */
+  background-color: #c4c6f5;
   border-radius: 20px;
   padding: 15px;
   display: flex;
@@ -366,9 +367,8 @@ margin-bottom: 60px;
   word-wrap: break-word;
 }
 
-/* Each question as a small pink bubble */
 .faq-question {
-  background-color: #5d3d9c;  /* pink */
+  background-color: #5d3d9c;
   color: white;
   border: none;
   padding: 8px 12px;
@@ -417,4 +417,174 @@ margin-bottom: 60px;
   padding: 8px 15px;
   margin-left: 10px;
   cursor: pointer;
+}
+
+/* Success message styling */
+.success-message {
+  text-align: center;
+  padding: 2rem;
+  background-color: #e8f5e9;
+  border-radius: 10px;
+  color: #2e7d32;
+}
+
+.success-message h2 {
+  color: #2e7d32;
+  margin-bottom: 1rem;
+}
+
+/* Improved form styling */
+.login-form input:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.register-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Add to your auth.css or create a new chat.css file */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.message {
+  padding: 10px 15px;
+  border-radius: 18px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.message.user {
+  align-self: flex-end;
+  background-color: #c96ba9;
+  color: white;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  background-color: #b1b9f5;
+  color: #333;
+}
+
+/* Feedback Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #b1b9f5;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #5d3d9c;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #5d3d9c;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 2.5rem;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.star {
+  cursor: pointer;
+  color: #ddd;
+  transition: color 0.2s;
+}
+
+.star:hover,
+.star.filled {
+  color: #ffd700;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #5d3d9c;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.form-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.form-actions button[type="button"] {
+  background-color: #c96ba9;
+  color: white;
+}
+
+.form-actions button[type="button"]:hover {
+  background-color: #d0d0d0;
+}
+
+.form-actions button[type="submit"] {
+  background-color: #5d3d9c;
+  color: white;
+}
+
+.form-actions button[type="submit"]:hover {
+  background-color: #4a2f7a;
+}
+
+.form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

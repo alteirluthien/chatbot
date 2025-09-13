@@ -1,8 +1,9 @@
+// src/app/chatbot/guest/page.js
 'use client';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../contexts/AuthContext';
+import FAQComponent from '../../../components/FAQComponent';
+import { isValidElement } from 'react';
 import '../../styles/auth.css';
 
 const faqResponses = {
@@ -19,106 +20,69 @@ const faqResponses = {
 
 export default function GuestChatbotPage() {
   const [input, setInput] = useState('');
-  const [faqVisible, setFaqVisible] = useState(false);
+  const [messages, setMessages] = useState([]);
   const router = useRouter();
-  const { user, logout } = useAuth();
 
-  const addMessage = (sender, content) => {
-    const chatContainer = document.getElementById("chat-container");
-    if (!chatContainer) return;
+  // Initialize with welcome message
+  useEffect(() => {
+    setMessages([{ 
+      sender: 'bot', 
+      content: 'Welcome to College Enquiry! How can I help you today?' 
+    }]);
+  }, []);
 
-    const messageWrapper = document.createElement("div");
-    messageWrapper.className = `chat-message ${sender}`;
-
-    const avatar = document.createElement("div");
-    avatar.className = `avatar ${sender}-avatar`;
-
-    const bubble = document.createElement("div");
-    bubble.className = `message-bubble ${sender}-bubble`;
-
-    if (typeof content === "string") {
-      bubble.innerHTML = content;
-    } else {
-      bubble.appendChild(content);
-    }
-
-    if (sender === "user") {
-      messageWrapper.appendChild(bubble);
-      messageWrapper.appendChild(avatar);
-    } else {
-      messageWrapper.appendChild(avatar);
-      messageWrapper.appendChild(bubble);
-    }
-
-    chatContainer.appendChild(messageWrapper);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+  // Handle FAQ question click
+  const handleFaqQuestionClick = (question) => {
+    // Add the bot's response to the FAQ question
+    addMessage('bot', faqResponses[question]);
   };
 
+  // Function to add messages
+  const addMessage = (sender, content) => {
+    setMessages(prev => [...prev, { sender, content }]);
+  };
+
+  // Function to send a message
   const sendMessage = () => {
     if (!input.trim()) return;
     addMessage('user', input);
     setInput('');
-
+    
+    // Simulate bot response
     setTimeout(() => {
       addMessage('bot', "⚠️ AI unavailable. You can explore FAQs.");
     }, 500);
   };
 
-  const showFAQs = () => setFaqVisible(!faqVisible);
-
-  const handleFaqClick = (question) => {
-    addMessage('bot', faqResponses[question]);
-    setFaqVisible(false);
+  // Function to show FAQs
+  const showFAQs = () => {
+    // Add a message with the FAQ component
+    addMessage('bot', (
+      <FAQComponent 
+        faqResponses={faqResponses} 
+        onQuestionClick={handleFaqQuestionClick} 
+      />
+    ));
   };
 
+  // Function to clear chat
   const clearChat = () => {
-    const chatContainer = document.getElementById("chat-container");
-    if (chatContainer) chatContainer.innerHTML = "";
-    addMessage('bot', 'Chat cleared. You can start a new conversation.');
+    setMessages([{ 
+      sender: 'bot', 
+      content: 'Chat cleared. You can start a new conversation.' 
+    }]);
   };
 
-  const saveChat = async () => {
-    if (!user) return alert("Login first to save chat.");
-
-    const chatContainer = document.getElementById("chat-container");
-    const messages = Array.from(chatContainer.children).map(div => {
-      const sender = div.classList.contains('user') ? 'user' : 'bot';
-      const text = div.querySelector('.message-bubble').innerText;
-      return { sender, text };
-    });
-
-    const sessionId = Date.now().toString();
-
-    const res = await fetch('/api/auth/savechat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat: messages, userEmail: user.email, sessionId })
-    });
-
-    const result = await res.json();
-    alert(result.message);
-  };
-
-  const openPreviousChat = async () => {
-    if (!user) return alert("Login first to open previous chat.");
-
-    const res = await fetch("/api/auth/getPreviousChat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userEmail: user.email })
-    });
-
-    const result = await res.json();
-
-    if (result.status === "success") {
-      clearChat();
-      result.chat.forEach(msg => addMessage(msg.sender, msg.chat_message));
+  // Function to render message content safely
+  const renderMessageContent = (content) => {
+    if (typeof content === 'string') {
+      return <span dangerouslySetInnerHTML={{ __html: content }} />;
+    } else if (isValidElement(content)) {
+      return content;
     } else {
-      alert(result.message);
+      return <span>{String(content)}</span>;
     }
   };
-
-  const feedback = () => alert("Open feedback modal (mock function).");
 
   return (
     <div className="chatbot-page-wrapper">
@@ -127,34 +91,26 @@ export default function GuestChatbotPage() {
         <div className="dropdown-container">
           <div className="menu-icon" onClick={() => document.getElementById("dropdownMenu").classList.toggle("show")}>☰</div>
           <div className="dropdown" id="dropdownMenu">
-            <button onClick={saveChat}>Save Chat</button>
-            <button onClick={openPreviousChat}>Open Previous Chat</button>
             <button onClick={clearChat}>Clear Chat</button>
-            <button onClick={feedback}>Feedback</button>
-            <button onClick={() => { logout(); router.push('/login'); }}>Logout</button>
           </div>
         </div>
       </header>
-
       <main className="chatbot-page">
-        <div className="chatbot-container" id="chat-container"></div>
-
+        <div className="chatbot-container" id="chat-container">
+          {messages.map((msg, index) => (
+            <div key={index} className={`chat-message ${msg.sender}`}>
+              <div className={`avatar ${msg.sender}-avatar`}></div>
+              <div className={`message-bubble ${msg.sender}-bubble`}>
+                {renderMessageContent(msg.content)}
+              </div>
+            </div>
+          ))}
+        </div>
         <div className="button-bar">
           <button onClick={showFAQs}>FAQ</button>
           <button onClick={() => router.push('/login')}>Login</button>
-          {faqVisible && (
-            <div className="faq-container">
-              <b>Frequently Asked Questions:</b>
-              {Object.keys(faqResponses).map((q) => (
-                <button key={q} className="faq-question" onClick={() => handleFaqClick(q)}>
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </main>
-
       <footer className="chat-footer">
         <div className="input-bubble">
           <input

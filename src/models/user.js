@@ -1,8 +1,9 @@
+// src/models/User.js
 import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
 import clientPromise from '../lib/mongodb';
 
-export class User {
+class User {
   constructor(data) {
     this.name = data.name;
     this.email = data.email;
@@ -18,49 +19,44 @@ export class User {
 
   static async findByEmail(email) {
     const collection = await this.getCollection();
-    return await collection.findOne({ email });
+    return await collection.findOne({ email: email.toLowerCase() });
   }
 
   static async create(userData) {
     const collection = await this.getCollection();
     
-    // Check if user already exists
     const existingUser = await this.findByEmail(userData.email);
     if (existingUser) {
       throw new Error('User already exists');
     }
-
-    // Hash password
+    
     const hashedPassword = await bcrypt.hash(userData.password, 12);
     
-    // Create user object
     const user = new User({
-      ...userData,
+      name: userData.name.trim(),
+      email: userData.email.trim().toLowerCase(),
       password: hashedPassword,
     });
-
-    // Insert into database
+    
     const result = await collection.insertOne(user);
     
-    // Return user without password
     const { password, ...userWithoutPassword } = user;
     return { ...userWithoutPassword, _id: result.insertedId };
   }
 
   static async authenticate(email, password) {
     const collection = await this.getCollection();
-    const user = await collection.findOne({ email });
+    const user = await collection.findOne({ email: email.toLowerCase() });
     
     if (!user) {
       return null;
     }
-
+    
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return null;
     }
-
-    // Return user without password
+    
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
@@ -77,3 +73,6 @@ export class User {
     return null;
   }
 }
+
+// Export the class
+export default User;

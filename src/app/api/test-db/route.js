@@ -1,4 +1,5 @@
-import clientPromise from '../../../lib/mongodb';
+// src/app/api/test-db/route.js
+import clientPromise from '@/lib/mongodb';
 
 export async function GET() {
   try {
@@ -6,8 +7,8 @@ export async function GET() {
     const client = await clientPromise;
     console.log('Connected to MongoDB client');
     
-    const db = client.db('college_enquiry');
-    console.log('Connected to college_enquiry database');
+    const db = client.db('chatbot'); // Use your actual database name
+    console.log('Connected to chatbot database');
     
     // Try to ping the database
     await db.admin().ping();
@@ -17,10 +18,23 @@ export async function GET() {
     const collections = await db.listCollections().toArray();
     console.log('Collections:', collections);
     
+    // Get user count
+    const usersCount = await db.collection('users').countDocuments();
+    console.log('Users count:', usersCount);
+    
+    // Get chats count
+    const chatsCount = await db.collection('user_chats').countDocuments();
+    console.log('Chats count:', chatsCount);
+    
     return Response.json({
       success: true,
       message: 'Successfully connected to MongoDB',
-      collections: collections.map(c => c.name)
+      database: 'chatbot',
+      collections: collections.map(c => c.name),
+      stats: {
+        usersCount,
+        chatsCount
+      }
     });
     
   } catch (error) {

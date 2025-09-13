@@ -1,16 +1,15 @@
-// src/app/api/feedback/route.js
 import clientPromise from "@/lib/mongodb";
 
 export async function POST(request) {
   try {
     const { userEmail, rating, comment, sessionId } = await request.json();
 
-    if (!userEmail) {
-      return Response.json({ status: 'error', message: 'User email is required' }, { status: 401 });
-    }
-
+    // Validate required fields
     if (!rating || rating < 1 || rating > 5) {
-      return Response.json({ status: 'error', message: 'Valid rating is required' }, { status: 400 });
+      return Response.json({ 
+        status: 'error', 
+        message: 'Valid rating is required (1-5)' 
+      }, { status: 400 });
     }
 
     const client = await clientPromise;
@@ -18,7 +17,7 @@ export async function POST(request) {
     const collection = db.collection("feedback");
 
     const feedbackDoc = {
-      user_email: userEmail,
+      user_email: userEmail || null,
       rating,
       comment: comment || '',
       session_id: sessionId || null,

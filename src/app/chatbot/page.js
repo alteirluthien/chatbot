@@ -1,9 +1,12 @@
+// src/app/chatbot/page.js
 'use client';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import FAQComponent from '../../components/FAQComponent';
+import { isValidElement } from 'react';
 import '../styles/auth.css';
+import FeedbackModal from '../../components/FeedbackModal';
 
 const faqResponses = {
   "What are the entry requirements?": "Entry requirements vary depending on the course. Please check the specific program page on our website or contact admissions for more details.",
@@ -17,136 +20,196 @@ const faqResponses = {
   "My student ID card is lost or stolen": "Report the loss to Student Services. You can request a replacement through the student portal or at the help desk."
 };
 
-export default function GuestChatbotPage() {
+export default function ChatbotPage() {
   const [input, setInput] = useState('');
-  const [faqVisible, setFaqVisible] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  const addMessage = (sender, content) => {
-    const chatContainer = document.getElementById("chat-container");
-    if (!chatContainer) return;
+  // Initialize with welcome message
+  useEffect(() => {
+    setMessages([{ 
+      sender: 'bot', 
+      content: 'Welcome to College Enquiry! How can I help you today?' 
+    }]);
+  }, []);
 
-    const messageWrapper = document.createElement("div");
-    messageWrapper.className = `chat-message ${sender}`;
-
-    const avatar = document.createElement("div");
-    avatar.className = `avatar ${sender}-avatar`;
-
-    const bubble = document.createElement("div");
-    bubble.className = `message-bubble ${sender}-bubble`;
-
-    if (typeof content === "string") {
-      bubble.innerHTML = content;
-    } else {
-      bubble.appendChild(content);
-    }
-
-    if (sender === "user") {
-      messageWrapper.appendChild(bubble);
-      messageWrapper.appendChild(avatar);
-    } else {
-      messageWrapper.appendChild(avatar);
-      messageWrapper.appendChild(bubble);
-    }
-
-    chatContainer.appendChild(messageWrapper);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+  // Handle FAQ question click
+  const handleFaqQuestionClick = (question) => {
+    // Add the bot's response to the FAQ question
+    addMessage('bot', faqResponses[question]);
   };
 
+  // Function to add messages
+  const addMessage = (sender, content) => {
+    setMessages(prev => [...prev, { sender, content }]);
+  };
+
+  // Function to send a message
   const sendMessage = () => {
     if (!input.trim()) return;
     addMessage('user', input);
     setInput('');
-
+    
+    // Simulate bot response
     setTimeout(() => {
       addMessage('bot', "⚠️ AI unavailable. You can explore FAQs.");
     }, 500);
   };
 
-    const showFAQs = () => {
-    const faqBubble = document.createElement("div");
-    faqBubble.className = "message-bubble bot-bubble faq-container";
-
-    const header = document.createElement("div");
-    header.innerHTML = "<b>Frequently Asked Questions:</b>";
-    faqBubble.appendChild(header);
-
-    Object.keys(faqResponses).forEach((question) => {
-      const qBtn = document.createElement("button");
-      qBtn.className = "faq-question";
-      qBtn.innerHTML = question;
-      qBtn.onclick = () => addMessage('bot', faqResponses[question]);
-      faqBubble.appendChild(qBtn);
-    });
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "chat-message bot";
-    const avatar = document.createElement("div");
-    avatar.className = "avatar bot-avatar";
-
-    wrapper.appendChild(avatar);
-    wrapper.appendChild(faqBubble);
-
-    const chatContainer = document.getElementById("chat-container");
-    chatContainer.appendChild(wrapper);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+  // Function to show FAQs
+  const showFAQs = () => {
+    // Add a message with the FAQ component
+    addMessage('bot', (
+      <FAQComponent 
+        faqResponses={faqResponses} 
+        onQuestionClick={handleFaqQuestionClick} 
+      />
+    ));
   };
 
-
-  const handleFaqClick = (question) => {
-    addMessage('bot', faqResponses[question]);
-    setFaqVisible(false);
-  };
-
+  // Function to clear chat
   const clearChat = () => {
-    const chatContainer = document.getElementById("chat-container");
-    if (chatContainer) chatContainer.innerHTML = "";
-    addMessage('bot', 'Chat cleared. You can start a new conversation.');
+    setMessages([{ 
+      sender: 'bot', 
+      content: 'Chat cleared. You can start a new conversation.' 
+    }]);
   };
 
+  // Function to save chat
   const saveChat = async () => {
     if (!user) return alert("Login first to save chat.");
-
-    const chatContainer = document.getElementById("chat-container");
-    const messages = Array.from(chatContainer.children).map(div => {
-      const sender = div.classList.contains('user') ? 'user' : 'bot';
-      const text = div.querySelector('.message-bubble').innerText;
-      return { sender, text };
-    });
-
-    const sessionId = Date.now().toString();
-
-    const res = await fetch('/api/auth/savechat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat: messages, userEmail: user.email, sessionId })
-    });
-
-    const result = await res.json();
-    alert(result.message);
-  };
-
-  const openPreviousChat = async () => {
-    if (!user) return alert("Login first to open previous chat.");
-
-    const res = await fetch("/api/auth/getPreviousChat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userEmail: user.email })
-    });
-
-    const result = await res.json();
-
-    if (result.status === "success") {
-      clearChat();
-      result.chat.forEach(msg => addMessage(msg.sender, msg.chat_message));
-    } else {
-      alert(result.message);
+    
+    try {
+      // Only save messages with string content (filter out React elements)
+      const stringMessages = messages.filter(msg => typeof msg.content === 'string');
+      
+      const formattedMessages = stringMessages.map(msg => ({
+        sender: msg.sender,
+        text: msg.content
+      }));
+      
+      const res = await fetch('/api/auth/savechat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          chat: formattedMessages, 
+          userEmail: user.email, 
+          sessionId: Date.now().toString() 
+        })
+      });
+      
+      const result = await res.json();
+      
+      if (result.status === 'success') {
+        alert(`Chat saved successfully! (${result.messagesSaved} messages)`);
+      } else {
+        alert(result.message || 'Failed to save chat');
+      }
+    } catch (error) {
+      console.error('Error saving chat:', error);
+      alert('Network error while saving chat');
     }
   };
 
-  const feedback = () => alert("Open feedback modal (mock function).");
+  // Function to open previous chat
+  const openPreviousChat = async () => {
+    if (!user) return alert("Login first to open previous chat.");
+    
+    try {
+      const res = await fetch("/api/auth/getPreviousChat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userEmail: user.email })
+      });
+      
+      const result = await res.json();
+      
+      if (result.status === "success") {
+        // Clear existing messages
+        setMessages([]);
+        
+        // Convert the retrieved messages to the format expected by the component
+        const formattedMessages = result.chat.map(msg => ({
+          sender: msg.sender,
+          content: msg.text || msg.chat_message || ''  // Ensure we have a string
+        }));
+        
+        // Set all messages at once
+        setMessages(formattedMessages);
+        
+        // Show success message
+        setTimeout(() => {
+          setMessages(prev => [...prev, { 
+            sender: 'bot', 
+            content: `Previous chat loaded (${result.chat.length} messages)` 
+          }]);
+        }, 100);
+      } else {
+        alert(result.message || "Failed to load previous chat");
+      }
+    } catch (error) {
+      console.error("Error loading previous chat:", error);
+      alert("Network error while loading previous chat");
+    }
+  };
+
+  // Function to handle feedback
+  const feedback = () => {
+    setIsFeedbackModalOpen(true);
+  };
+
+  // Function to handle feedback submission
+// In src/app/chatbot/page.js
+const handleFeedbackSubmit = async (feedbackData) => {
+  if (!user) return alert("Login first to submit feedback.");
+  
+  try {
+    console.log('Submitting feedback:', feedbackData);
+    
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        ...feedbackData, 
+        userEmail: user.email,
+        sessionId: Date.now().toString()
+      })
+    });
+    
+    console.log('Response status:', res.status);
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
+    }
+    
+    const result = await res.json();
+    console.log('Response data:', result);
+    
+    if (result.status === 'success') {
+      alert('Thank you for your feedback!');
+      setIsFeedbackModalOpen(false);
+    } else {
+      alert(result.message || 'Failed to submit feedback');
+    }
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    alert(`Error submitting feedback: ${error.message}`);
+  }
+};
+
+  // Function to render message content safely
+  const renderMessageContent = (content) => {
+    if (typeof content === 'string') {
+      return <span dangerouslySetInnerHTML={{ __html: content }} />;
+    } else if (isValidElement(content)) {
+      return content;
+    } else {
+      return <span>{String(content)}</span>;
+    }
+  };
 
   return (
     <div className="chatbot-page-wrapper">
@@ -163,15 +226,21 @@ export default function GuestChatbotPage() {
           </div>
         </div>
       </header>
-
       <main className="chatbot-page">
-        <div className="chatbot-container" id="chat-container"></div>
-
-       <div className="button-bar">
+        <div className="chatbot-container" id="chat-container">
+          {messages.map((msg, index) => (
+            <div key={index} className={`chat-message ${msg.sender}`}>
+              <div className={`avatar ${msg.sender}-avatar`}></div>
+              <div className={`message-bubble ${msg.sender}-bubble`}>
+                {renderMessageContent(msg.content)}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="button-bar">
           <button onClick={showFAQs}>FAQ</button>
         </div>
       </main>
-
       <footer className="chat-footer">
         <div className="input-bubble">
           <input
@@ -184,6 +253,13 @@ export default function GuestChatbotPage() {
           <button onClick={sendMessage}>🔍</button>
         </div>
       </footer>
+      
+      {/* Add the FeedbackModal at the end of the component, not inside the footer */}
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        onSubmit={handleFeedbackSubmit}
+      />
     </div>
   );
 }
