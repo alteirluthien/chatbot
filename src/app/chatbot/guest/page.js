@@ -54,17 +54,30 @@ export default function GuestChatbotPage() {
     }, 500);
   };
 
-  // Function to show FAQs
-  const showFAQs = () => {
-    // Add a message with the FAQ component
-    addMessage('bot', (
-      <FAQComponent 
-        faqResponses={faqResponses} 
-        onQuestionClick={handleFaqQuestionClick} 
-      />
-    ));
-  };
+// Merge of FAQ button creation and showFAQs
+const showFAQs = () => {
+  // Create a container for FAQ buttons
+  const bubble = document.createElement("div");
+  bubble.className = "faq-container";
 
+  Object.keys(faqResponses).forEach((question) => {
+    const qBtn = document.createElement("button");
+    qBtn.className = "faq-question";
+    qBtn.innerHTML = question;
+
+    qBtn.onclick = () => {
+      // Add question as user message
+      addMessage("user", question);
+      // Add corresponding answer as bot message
+      addMessage("bot", faqResponses[question]);
+    };
+
+    bubble.appendChild(qBtn);
+  });
+
+  // Append the bubble to the chat as a bot message
+  addMessage("bot", bubble);
+};
   // Function to clear chat
   const clearChat = () => {
     setMessages([{ 

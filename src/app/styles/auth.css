@@ -9,6 +9,7 @@
 body, html {
   height: 100%;
   background-color: #fcdfea;
+  user-select: none;
  
 }
 
@@ -354,32 +355,76 @@ margin-bottom: 60px;
   text-decoration: underline;
 }
 
-/* Big purple bubble for all FAQs */
-/* Add to auth.css */
-.faq-container {
-  background-color: #c4c6f5;
-  border-radius: 20px;
-  padding: 15px;
+/* FAQ Chat Container */
+.faq-chat-container {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 10px;
+}
+
+.faq-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+/* FAQ Options Container */
+.faq-options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-width: 90%;
-  word-wrap: break-word;
+  gap: 12px;
+  padding-left: 40px; /* Align with the message bubble */
 }
 
-.faq-question {
-  background-color: #5d3d9c;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 15px;
+/* FAQ Option */
+.faq-option {
   cursor: pointer;
-  text-align: left;
-  transition: background 0.3s;
+  transition: transform 0.2s ease;
 }
 
-.faq-question:hover {
-  background-color: #d674a3;
+.faq-option:hover {
+  transform: translateX(5px);
+}
+
+/* FAQ Bubble - Styled like a user message */
+.faq-bubble {
+  background-color: #e3f2fd; /* Light blue background */
+  color: #0d47a1; /* Dark blue text */
+  padding: 12px 16px;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  max-width: 80%;
+  word-wrap: break-word;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.faq-bubble:hover {
+  background-color: #bbdefb; /* Slightly darker blue on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.faq-bubble:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Add a small arrow to the bubble */
+.faq-bubble::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 15px;
+  border-width: 8px 8px 8px 0;
+  border-style: solid;
+  border-color: transparent #e3f2fd transparent transparent;
+}
+
+.faq-bubble:hover::before {
+  border-color: transparent #bbdefb transparent transparent;
 }
 
 

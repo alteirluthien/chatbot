@@ -1,21 +1,30 @@
 // src/components/FAQComponent.js
-'use client';
+import React, { useEffect, useRef } from 'react';
 
 const FAQComponent = ({ faqResponses, onQuestionClick }) => {
-  return (
-    <div className="faq-container">
-      <b>Frequently Asked Questions:</b>
-      {Object.keys(faqResponses).map((question) => (
-        <button
-          key={question}
-          className="faq-question"
-          onClick={() => onQuestionClick(question)}
-        >
-          {question}
-        </button>
-      ))}
-    </div>
-  );
+  const faqContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (faqContainerRef.current) {
+      // Clear existing content
+      faqContainerRef.current.innerHTML = '';
+      
+      // Create buttons for each FAQ question
+      Object.keys(faqResponses).forEach((question) => {
+        const qBtn = document.createElement("button");
+        qBtn.className = "faq-question";
+        qBtn.innerHTML = question;
+
+        qBtn.onclick = () => {
+          onQuestionClick(question);
+        };
+
+        faqContainerRef.current.appendChild(qBtn);
+      });
+    }
+  }, [faqResponses, onQuestionClick]);
+
+  return <div ref={faqContainerRef} className="faq-list"></div>;
 };
 
 export default FAQComponent;
