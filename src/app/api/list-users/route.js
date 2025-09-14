@@ -4,7 +4,7 @@ import clientPromise from '@/lib/mongodb';
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db('college_enquiry');
+    const db = client.db('chatbot');
     const users = await db.collection('users').find({}).toArray();
     
     // Remove password field for security
