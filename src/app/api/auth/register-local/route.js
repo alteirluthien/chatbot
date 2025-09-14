@@ -1,5 +1,5 @@
 import dbConnect from '@/lib/mongodb';
-import { User } from '@/models/User';
+import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 
 export async function registerUser({ name, email, password }) {
