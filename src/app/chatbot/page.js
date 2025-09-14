@@ -8,6 +8,14 @@ import { isValidElement } from 'react';
 import '../styles/auth.css';
 import FeedbackModal from '../../components/FeedbackModal';
 
+export default function ChatbotPage() {
+  const { user } = useAuth();
+  
+  if (!user) {
+    redirect('/login');
+  }
+  
+
 const faqResponses = {
   "What are the entry requirements?": "Entry requirements vary depending on the course. Please check the specific program page on our website or contact admissions for more details.",
   "How do I apply for an undergraduate program?": 'You can apply via our online application portal. <a href="https://www.vu.edu.au/enquire-now" target="_blank" rel="noopener noreferrer"><u>Click Here ➚</u></a>',
@@ -161,7 +169,6 @@ export default function ChatbotPage() {
   };
 
   // Function to handle feedback submission
-// In src/app/chatbot/page.js
 const handleFeedbackSubmit = async (feedbackData) => {
   if (!user) return alert("Login first to submit feedback.");
   
