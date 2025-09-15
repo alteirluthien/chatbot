@@ -13,25 +13,37 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
+// src/app/login/page.js
+const handleSubmit = async (e) => {
   e.preventDefault();
-  setIsLoading(true);
   setError('');
   
   try {
-    const result = await login(email, password);
-    if (result.success) {
-      router.push('/chatbot');
-    } else {
-      setError(result.error || 'Login failed');
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      // Display the specific error message from the server
+      throw new Error(data.message || 'Login failed');
     }
-  } catch (err) {
-    setError('Network error');
-  } finally {
-    setIsLoading(false);
+    
+    // Store token and user data
+    localStorage.setItem('token', data.user.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    
+    // Redirect to chatbot
+    router.push('/chatbot');
+  } catch (error) {
+    console.error('Login error:', error);
+    // Display the specific error message
+    setError(error.message);
   }
 };
-
   return (
     <div className="login-page">
       {/* Top bar */}

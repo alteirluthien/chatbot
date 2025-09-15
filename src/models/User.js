@@ -19,15 +19,29 @@ class User {
 
   static async findByEmail(email) {
     const collection = await this.getCollection();
-    return await collection.findOne({ email: email.toLowerCase() });
+    const user = await collection.findOne({ email: email.toLowerCase() });
+    // Return null or a plain object without MongoDB-specific properties
+    return user ? JSON.parse(JSON.stringify(user)) : null;
   }
 
   static async create(userData) {
     const collection = await this.getCollection();
     
+    // Check if user already exists
     const existingUser = await this.findByEmail(userData.email);
     if (existingUser) {
       throw new Error('User already exists');
+    }
+    
+    // Validate password length
+    if (userData.password.length < 6) {
+      throw new Error('Password must be at least 6 characters long');
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userData.email)) {
+      throw new Error('Invalid email format');
     }
     
     const hashedPassword = await bcrypt.hash(userData.password, 12);
@@ -40,8 +54,13 @@ class User {
     
     const result = await collection.insertOne(user);
     
-    const { password, ...userWithoutPassword } = user;
-    return { ...userWithoutPassword, _id: result.insertedId };
+    // Create a completely plain object
+    return {
+      _id: result.insertedId.toString(),
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt.toISOString() // Convert Date to string
+    };
   }
 
   static async authenticate(email, password) {
@@ -49,16 +68,21 @@ class User {
     const user = await collection.findOne({ email: email.toLowerCase() });
     
     if (!user) {
-      return null;
+      throw new Error('User not found');
     }
     
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      return null;
+      throw new Error('Invalid password');
     }
     
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    // Create a completely plain object
+    return {
+      _id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt.toISOString() // Convert Date to string
+    };
   }
 
   static async findById(id) {
@@ -66,13 +90,17 @@ class User {
     const user = await collection.findOne({ _id: new ObjectId(id) });
     
     if (user) {
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+      // Create a completely plain object
+      return {
+        _id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt.toISOString() // Convert Date to string
+      };
     }
     
     return null;
   }
 }
 
-// Fixed export statement
 export default User;

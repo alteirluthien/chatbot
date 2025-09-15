@@ -56,57 +56,38 @@ export default function RegisterPage() {
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+// src/app/register/page.js
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setSuccess('');
+  
+  try {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    });
     
-    // Clear any previous errors
-    setError('');
+    const data = await response.json();
     
-    // Validate form
-    if (!validateForm()) {
-      return;
+    if (!response.ok) {
+      // Display the specific error message from the server
+      throw new Error(data.message || 'Registration failed');
     }
     
-    setIsLoading(true);
-    
-    try {
-      console.log('Submitting registration with:', {
-        name: formData.name,
-        email: formData.email,
-        passwordLength: formData.password.length
-      });
-      
-      const result = await register(
-        formData.name, 
-        formData.email, 
-        formData.password
-      );
-      
-      console.log('Registration result:', result);
-      
-      if (result.success) {
-        setSuccess(true);
-        // Clear form
-        setFormData({
-          name: '',
-          email: '',
-          password: '',
-          confirmPassword: ''
-        });
-        // Redirect to login after a short delay
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
-      } else {
-        setError(result.error || 'Registration failed');
-      }
-    } catch (err) {
-      console.error('Registration error:', err);
-      setError('Network error. Please try again later.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Success handling
+    setSuccess('Registration successful! Please login.');
+    // Optionally redirect after a delay
+    setTimeout(() => {
+      router.push('/login');
+    }, 2000);
+  } catch (error) {
+    console.error('Registration error:', error);
+    // Display the specific error message
+    setError(error.message);
+  }
+};
 
   return (
     <div className="login-page">
