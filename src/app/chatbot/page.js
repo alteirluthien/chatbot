@@ -20,10 +20,45 @@ const faqResponses = {
   "My student ID card is lost or stolen": "Report the loss to Student Services. You can request a replacement through the student portal or at the help desk."
 };
 
+// Function to get bot response based on user message
+function getBotReply(message) {
+  // Convert message to lowercase for case-insensitive matching
+  const lowerMessage = message.toLowerCase().trim();
+  
+  // Check if the message matches any FAQ question exactly
+  for (const question in faqResponses) {
+    if (lowerMessage === question.toLowerCase()) {
+      return faqResponses[question];
+    }
+  }
+  
+  // Check for keywords in the message
+  if (lowerMessage.includes("admission") || lowerMessage.includes("apply")) {
+    return 'You can apply online through our website. Applications usually close in November. <a href="https://www.vu.edu.au/enquire-now" target="_blank" rel="noopener noreferrer"><u>Click Here ➚</u></a> to enquire now';
+  }
+  else if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
+    return `Hello! What can I do for you?`;
+  }
+  else if (lowerMessage.includes("course") || lowerMessage.includes("program")) {
+    return 'We offer IT, Business, Nursing, Engineering, and more. You can find details <a href="https://www.vu.edu.au/study-at-vu/courses/browse-study-areas/all-courses-a-to-z" target="_blank" rel="noopener noreferrer"><u>Here ➚</u></a>.';
+  } else if (lowerMessage.includes("fee") || lowerMessage.includes("tuition")) {
+    return 'Fees vary by course. International students typically pay from $18,000/year. <a href="https://www.vu.edu.au/study-at-vu/fees-scholarships/course-tuition-fees" target="_blank" rel="noopener noreferrer"><u>Click Here ➚</u></a> for more information';
+  } else if (lowerMessage.includes("contact") || lowerMessage.includes("email") || lowerMessage.includes("phone")) {
+    return "You can contact us at enquiry@vu.edu.au or call +61 3 9919 6100. Monday to Friday from 8 am to 5 pm";
+  } else if (lowerMessage.includes("scholarship")) {
+    return 'Yes, we offer both merit- and need-based scholarships. Visit our website for more details <a href="https://www.vu.edu.au/study-at-vu/fees-scholarships/scholarships" target="_blank" rel="noopener noreferrer"><u>Click Here ➚</u></a>';
+  } else if (lowerMessage.includes("login")) {
+    return 'You can log in using your student ID on the student portal. <a href="https://login.vu.edu.au/cas/login?service=https%3A%2F%2Fidpweb1.vu.edu.au%2Fidp%2FAuthn%2FExternal%3Fconversation%3De1s2%26entityId%3Dhttps%3A%2F%2Fmyvu.edu.au%2Fmyvu" target="_blank" rel="noopener noreferrer"><u>Click Here ➚</u></a> for student login portal';
+  } else {
+    return 'I am sorry, I did not understand that. You can ask about admissions, courses, fees, contact details or any frequently asked questions.';
+  }
+}
+
 export default function ChatbotPage() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
   const { user, logout } = useAuth();
 
@@ -37,7 +72,9 @@ export default function ChatbotPage() {
 
   // Handle FAQ question click
   const handleFaqQuestionClick = (question) => {
-    // Add the bot's response to the FAQ question
+    // Add the user's question
+    addMessage('user', question);
+    // Add the bot's answer
     addMessage('bot', faqResponses[question]);
   };
 
@@ -49,23 +86,33 @@ export default function ChatbotPage() {
   // Function to send a message
   const sendMessage = () => {
     if (!input.trim()) return;
-    addMessage('user', input);
-    setInput('');
     
-    // Simulate bot response
+    // Add user message
+    addMessage('user', input);
+    
+    // Get bot response
+    const botResponse = getBotReply(input);
+    
+    // Add bot response after a short delay
     setTimeout(() => {
-      addMessage('bot', "⚠️ AI unavailable. You can explore FAQs.");
+      addMessage('bot', botResponse);
     }, 500);
+    
+    // Clear input
+    setInput('');
   };
 
   // Function to show FAQs
   const showFAQs = () => {
     // Add a message with the FAQ component
     addMessage('bot', (
-      <FAQComponent 
-        faqResponses={faqResponses} 
-        onQuestionClick={handleFaqQuestionClick} 
-      />
+      <div className="faq-bubble">
+        <div className="faq-header">Here are some frequently asked questions:</div>
+        <FAQComponent 
+          faqResponses={faqResponses} 
+          onQuestionClick={handleFaqQuestionClick} 
+        />
+      </div>
     ));
   };
 
@@ -100,6 +147,10 @@ export default function ChatbotPage() {
         })
       });
       
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const result = await res.json();
       
       if (result.status === 'success') {
@@ -123,6 +174,10 @@ export default function ChatbotPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userEmail: user.email })
       });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       
       const result = await res.json();
       
@@ -161,43 +216,43 @@ export default function ChatbotPage() {
   };
 
   // Function to handle feedback submission
-const handleFeedbackSubmit = async (feedbackData) => {
-  if (!user) return alert("Login first to submit feedback.");
-  
-  try {
-    console.log('Submitting feedback:', feedbackData);
+  const handleFeedbackSubmit = async (feedbackData) => {
+    if (!user) return alert("Login first to submit feedback.");
     
-    const res = await fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        ...feedbackData, 
-        userEmail: user.email,
-        sessionId: Date.now().toString()
-      })
-    });
-    
-    console.log('Response status:', res.status);
-    
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
+    try {
+      console.log('Submitting feedback:', feedbackData);
+      
+      const res = await fetch('/api/auth/feedback', {  // Changed to /api/auth/feedback
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ...feedbackData, 
+          userEmail: user.email,
+          sessionId: Date.now().toString()
+        })
+      });
+      
+      console.log('Response status:', res.status);
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
+      }
+      
+      const result = await res.json();
+      console.log('Response data:', result);
+      
+      if (result.status === 'success') {
+        alert('Thank you for your feedback!');
+        setIsFeedbackModalOpen(false);
+      } else {
+        alert(result.message || 'Failed to submit feedback');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert(`Error submitting feedback: ${error.message}`);
     }
-    
-    const result = await res.json();
-    console.log('Response data:', result);
-    
-    if (result.status === 'success') {
-      alert('Thank you for your feedback!');
-      setIsFeedbackModalOpen(false);
-    } else {
-      alert(result.message || 'Failed to submit feedback');
-    }
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-    alert(`Error submitting feedback: ${error.message}`);
-  }
-};
+  };
 
   // Function to render message content safely
   const renderMessageContent = (content) => {
@@ -215,8 +270,8 @@ const handleFeedbackSubmit = async (feedbackData) => {
       <header className="top-bar">
         <h1>College Enquiry</h1>
         <div className="dropdown-container">
-          <div className="menu-icon" onClick={() => document.getElementById("dropdownMenu").classList.toggle("show")}>☰</div>
-          <div className="dropdown" id="dropdownMenu">
+          <div className="menu-icon" onClick={() => setShowDropdown(!showDropdown)}>☰</div>
+          <div className={`dropdown ${showDropdown ? 'show' : ''}`} id="dropdownMenu">
             <button onClick={saveChat}>Save Chat</button>
             <button onClick={openPreviousChat}>Open Previous Chat</button>
             <button onClick={clearChat}>Clear Chat</button>
@@ -236,6 +291,7 @@ const handleFeedbackSubmit = async (feedbackData) => {
             </div>
           ))}
         </div>
+        
         <div className="button-bar">
           <button onClick={showFAQs}>FAQ</button>
         </div>
@@ -253,7 +309,7 @@ const handleFeedbackSubmit = async (feedbackData) => {
         </div>
       </footer>
       
-      {/* Add the FeedbackModal at the end of the component, not inside the footer */}
+      {/* Feedback Modal */}
       <FeedbackModal
         isOpen={isFeedbackModalOpen}
         onClose={() => setIsFeedbackModalOpen(false)}
