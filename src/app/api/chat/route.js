@@ -1,4 +1,5 @@
-import OpenAI from 'openai';
+// src/app/api/chat/route.js
+import { OpenAI } from 'openai';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,53 +8,40 @@ const openai = new OpenAI({
 export async function POST(request) {
   try {
     const { messages } = await request.json();
-
-    if (!process.env.OPENAI_API_KEY) {
+    
+    if (!messages || !Array.isArray(messages)) {
       return Response.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
+        { error: 'Invalid messages format' },
+        { status: 400 }
       );
     }
 
-    const response = await openai.chat.completions.create({
+    // Format messages for OpenAI
+    const formattedMessages = messages.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: typeof msg.content === 'string' ? msg.content : String(msg.content)
+    }));
+
+    // Add system message
+    formattedMessages.unshift({
+      role: 'system',
+      content: 'You are a helpful assistant for a college enquiry chatbot. Provide concise and helpful answers to questions about college admissions, courses, fees, and other related topics.'
+    });
+
+    const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      messages: messages,
-      max_tokens: 500,
+      messages: formattedMessages,
+      max_tokens: 150,
       temperature: 0.7,
     });
 
-    return Response.json({
-      content: response.choices[0].message.content,
-    });
+    const response = completion.choices[0].message.content;
+
+    return Response.json({ response });
   } catch (error) {
     console.error('OpenAI API error:', error);
-    
-    // Handle specific OpenAI API errors
-    if (error.status === 429) {
-      return Response.json(
-        { 
-          error: 'OpenAI quota exceeded. Please check your billing details or try again later.',
-          type: 'quota_exceeded'
-        },
-        { status: 429 }
-      );
-    }
-    
-    if (error.status === 401) {
-      return Response.json(
-        { 
-          error: 'Invalid OpenAI API key. Please check your configuration.',
-          type: 'auth_error'
-        },
-        { status: 401 }
-      );
-    }
-    
     return Response.json(
-      { 
-        error: 'Failed to process your request. Please try again later.',
-        type: 'general_error'
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

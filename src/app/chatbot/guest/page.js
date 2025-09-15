@@ -78,24 +78,40 @@ export default function GuestChatbotPage() {
     setMessages(prev => [...prev, { sender, content }]);
   };
   
-  // Function to send a message
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  // src/app/chatbot/guest/page.js
+
+// Function to send a message
+const sendMessage = async () => {
+  if (!input.trim()) return;
+  
+  // Add user message
+  addMessage('user', input);
+  
+  // Clear input
+  const userMessage = input;
+  setInput('');
+  
+  // Try to get a response from ChatGPT API
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [...messages, { sender: 'user', content: userMessage }] })
+    });
     
-    // Add user message
-    addMessage('user', input);
-    
-    // Get bot response
-    const botResponse = getBotReply(input);
-    
-    // Add bot response after a short delay
-    setTimeout(() => {
-      addMessage('bot', botResponse);
-    }, 500);
-    
-    // Clear input
-    setInput('');
-  };
+    if (res.ok) {
+      const data = await res.json();
+      addMessage('bot', data.response);
+    } else {
+      throw new Error('API request failed');
+    }
+  } catch (error) {
+    console.error('Error with ChatGPT API:', error);
+    // Fallback to static responses
+    const botResponse = getBotReply(userMessage);
+    addMessage('bot', botResponse);
+  }
+};
   
   // Function to show FAQs
   const showFAQs = () => {
